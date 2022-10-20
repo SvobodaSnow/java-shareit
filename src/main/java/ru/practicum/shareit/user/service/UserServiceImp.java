@@ -77,7 +77,7 @@ public class UserServiceImp implements UserService {
     private void checkDuplicate(User user) {
         for (User userCheck : userStorage.getAllUsers().values()) {
             if (userCheck.getEmail().equals(user.getEmail())) {
-                throw new AlreadyExistsException("Пользователь с данным email уже зарегистрирован");
+                throw new AlreadyExistsException("Пользователь с email: " + user.getEmail() + " уже зарегистрирован");
             }
         }
     }

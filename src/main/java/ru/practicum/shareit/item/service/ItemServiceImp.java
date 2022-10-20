@@ -54,7 +54,8 @@ public class ItemServiceImp implements ItemService {
     public Item updateItem(Item item) {
         Item oldItem = getItemById(item.getId());
         if (oldItem.getOwner() != item.getOwner()) {
-            throw new NotFoundException("ID владельца и изменяющего вещь не совпадают");
+            throw new NotFoundException("ID владельца: " + oldItem.getOwner() +
+                    " и пользователя: " + item.getOwner() + ", изменяющего вещь, не совпадают");
         }
         if (item.getAvailable() != null) {
             oldItem.setAvailable(item.getAvailable());
