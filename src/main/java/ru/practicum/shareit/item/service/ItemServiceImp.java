@@ -109,11 +109,11 @@ public class ItemServiceImp implements ItemService {
 
     @Override
     public List<ItemDto> searchItem(String text) {
+        List<Item> itemList;
         if (text.isEmpty()) {
             return new ArrayList<>();
         } else {
-            List<Item> itemList = itemStorage.
-                    findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndAvailableTrue(
+            itemList = itemStorage.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndAvailableTrue(
                             text,
                             text
                     );
