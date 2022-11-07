@@ -3,15 +3,19 @@ package ru.practicum.shareit.item.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.model.NotFoundException;
 import ru.practicum.shareit.exceptions.model.ValidationException;
+import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.storage.CommentStorage;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Primary
 @Service
@@ -20,68 +24,175 @@ public class ItemServiceImp implements ItemService {
     private ItemStorage itemStorage;
     @Autowired
     private UserService userService;
+    @Autowired
+    private BookingService bookingService;
+    @Autowired
+    private CommentStorage commentStorage;
 
     @Override
-    public Item createItem(Item item) {
+    public ItemDto createItem(Item item) {
         checkNameItem(item);
         checkDescriptionItem(item);
         checkAvailableItem(item);
-        userService.getUserById(item.getOwner());
-        return itemStorage.addItem(item);
+        checkOwnerId(item);
+        return ItemMapper.toItemDtoWithoutBooking(itemStorage.save(item), null);
     }
 
     @Override
-    public Map<Integer, Item> getAllItemsByUser(int userId) {
-        Map<Integer, Item> items = new HashMap<>();
-        for (Item item : itemStorage.getAllItems().values()) {
-            if (item.getOwner() == userId) {
-                items.put(item.getId(), item);
+    public List<ItemDto> getAllItemsByUser(Long userId) {
+        List<Item> itemList = itemStorage.findByOwner(userId);
+        List<ItemDto> itemDtoList = new ArrayList<>();
+        for (Item item : itemList) {
+            List<Comment> comments = commentStorage.findByItemId(item.getId());
+            List<CommentDto> commentDtoList = new ArrayList<>();
+            for (Comment comment : comments) {
+                commentDtoList.add(CommentMapper.toCommentDto(
+                        comment,
+                        userService.getUserById(comment.getAuthorId()).getName())
+                );
             }
+            itemDtoList.add(
+                    ItemMapper.toItemDto(
+                        item,
+                        getLastBooking(item.getId()),
+                        getNextBooking(item.getId()),
+                        commentDtoList
+                    )
+            );
         }
-        return items;
+        return itemDtoList;
     }
 
     @Override
-    public Item getItemById(int itemId) {
-        Item item = itemStorage.getItemById(itemId);
-        if (item == null) {
-            throw new NotFoundException("Вещи с ID " + itemId + " нет в списке");
+    public ItemDto getItemByIdWithBooking(Long itemId, Long userId) {
+        Item item = getItemById(itemId);
+        List<Comment> comments = commentStorage.findByItemId(item.getId());
+        List<CommentDto> commentDtoList = new ArrayList<>();
+        for (Comment comment : comments) {
+            commentDtoList.add(CommentMapper.toCommentDto(
+                    comment,
+                    userService.getUserById(comment.getAuthorId()).getName())
+            );
         }
-        return item;
+        if (item.getOwner().equals(userId)) {
+            return ItemMapper.toItemDto(
+                    item,
+                    getLastBooking(item.getId()),
+                    getNextBooking(item.getId()),
+                    commentDtoList
+            );
+        }
+        return ItemMapper.toItemDtoWithoutBooking(item, commentDtoList);
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public ItemDto updateItem(Item item) {
         Item oldItem = getItemById(item.getId());
-        if (oldItem.getOwner() != item.getOwner()) {
+        if (!oldItem.getOwner().equals(item.getOwner())) {
             throw new NotFoundException("ID владельца: " + oldItem.getOwner() +
                     " и пользователя: " + item.getOwner() + ", изменяющего вещь, не совпадают");
         }
-        if (item.getAvailable() != null) {
-            oldItem.setAvailable(item.getAvailable());
+        if (item.getAvailable() == null && item.getName() == null && item.getDescription() == null) {
+            throw new ValidationException("Не указаны новые поля для вещи");
         }
-        if (item.getName() != null) {
-            oldItem.setName(item.getName());
+        if (item.getAvailable() == null) {
+            item.setAvailable(oldItem.getAvailable());
         }
-        if (item.getDescription() != null) {
-            oldItem.setDescription(item.getDescription());
+        if (item.getName() == null) {
+            item.setName(oldItem.getName());
         }
-        return getItemById(item.getId());
+        if (item.getDescription() == null) {
+            item.setDescription(oldItem.getDescription());
+        }
+        return ItemMapper.toItemDtoWithoutBooking(itemStorage.save(item), null);
     }
 
     @Override
-    public Map<Integer, Item> searchItem(String text) {
-        Map<Integer, Item> items = new HashMap<>();
-        if (!text.isEmpty()) {
-            for (Item item : itemStorage.getAllItems().values()) {
-                if (item.getName().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)) ||
-                        item.getDescription().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)) &&
-                                item.getAvailable()) {
-                    items.put(item.getId(), item);
+    public List<ItemDto> searchItem(String text) {
+        if (text.isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            List<Item> itemList = itemStorage.
+                    findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndAvailableTrue(
+                            text,
+                            text
+                    );
+            List<ItemDto> itemDtoList = new ArrayList<>();
+            for (Item item : itemList) {
+                List<Comment> comments = commentStorage.findByItemId(item.getId());
+                List<CommentDto> commentDtoList = new ArrayList<>();
+                for (Comment comment : comments) {
+                    commentDtoList.add(CommentMapper.toCommentDto(
+                            comment,
+                            userService.getUserById(comment.getAuthorId()).getName())
+                    );
                 }
+                itemDtoList.add(
+                        ItemMapper.toItemDto(
+                                item,
+                                getLastBooking(item.getId()),
+                                getNextBooking(item.getId()),
+                                commentDtoList
+                        )
+                );
             }
+            return itemDtoList;
         }
-        return items;
+    }
+
+    @Override
+    public CommentDto addComment(Comment comment) {
+        if (comment.getText() == null || comment.getText().isEmpty()) {
+            throw new ValidationException("Текст коментария не передан");
+        }
+        List<Booking> bookingList = bookingService.getBookingByItemIdAndBookerId(
+                comment.getAuthorId(),
+                comment.getItemId()
+        );
+        if (bookingList.size() == 0) {
+            throw new ValidationException("Пользователь c ID " + comment.getAuthorId() +
+                    ", оставляющий коментарий не брал вещь в аренду");
+        }
+        Comment commentNew = commentStorage.save(comment);
+
+        return CommentMapper.toCommentDto(commentNew, userService.getUserById(comment.getAuthorId()).getName());
+    }
+
+    @Override
+    public Item getItemById(Long itemId) {
+        return itemStorage.getById(itemId);
+    }
+
+    private BookingForItemDto getLastBooking(Long itemId) {
+        Booking lastBooking = bookingService.getLastBooking(itemId);
+        BookingForItemDto lastBookingDto;
+        if (lastBooking != null) {
+            lastBookingDto = new BookingForItemDto(
+                    lastBooking.getId(),
+                    lastBooking.getBooker().getId(),
+                    lastBooking.getStart(),
+                    lastBooking.getEnd()
+            );
+        } else {
+            lastBookingDto = null;
+        }
+        return lastBookingDto;
+    }
+
+    private BookingForItemDto getNextBooking(Long itemId) {
+        Booking nextBooking = bookingService.getNextBooking(itemId);
+        BookingForItemDto nextBookingDto;
+        if (nextBooking != null) {
+            nextBookingDto = new BookingForItemDto(
+                    nextBooking.getId(),
+                    nextBooking.getBooker().getId(),
+                    nextBooking.getStart(),
+                    nextBooking.getEnd()
+            );
+        } else {
+            nextBookingDto = null;
+        }
+        return nextBookingDto;
     }
 
     private void checkNameItem(Item item) {
@@ -100,5 +211,9 @@ public class ItemServiceImp implements ItemService {
         if (item.getAvailable() == null) {
             throw new ValidationException("Не указана доступность товара");
         }
+    }
+
+    private void checkOwnerId(Item item) {
+        userService.getUserById(item.getOwner()).getName();
     }
 }

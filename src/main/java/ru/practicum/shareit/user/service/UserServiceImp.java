@@ -9,6 +9,7 @@ import ru.practicum.shareit.exceptions.model.ValidationException;
 import ru.practicum.shareit.user.storage.UserStorage;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.List;
 import java.util.Map;
 
 @Primary
@@ -21,42 +22,38 @@ public class UserServiceImp implements UserService {
     public User createUser(User newUser) {
         checkNameUser(newUser);
         checkEmailUser(newUser);
-        checkDuplicate(newUser);
-        return userStorage.addUser(newUser);
+        return userStorage.save(newUser);
     }
 
     @Override
     public User updateUser(User updateUser) {
-        getUserById(updateUser.getId());
-        checkDuplicate(updateUser);
-        if (updateUser.getEmail() == null && updateUser.getName() != null) {
-            return userStorage.updateUserName(updateUser);
-        } else if (updateUser.getEmail() != null && updateUser.getName() == null) {
-            return userStorage.updateUserEmail(updateUser);
-        } else if (updateUser.getEmail() != null && updateUser.getName() != null) {
-            return userStorage.updateUser(updateUser);
-        } else {
+        User oldUser = getUserById(updateUser.getId());
+        if ((updateUser.getEmail() == null || updateUser.getEmail().isEmpty()) &&
+                (updateUser.getName() == null || updateUser.getName().isEmpty())) {
             throw new ValidationException("Не указаны новые имя или email");
         }
-    }
-
-    @Override
-    public User getUserById(int userId) {
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователя с ID " + userId + " нет в списке");
+        if (updateUser.getEmail() == null || updateUser.getEmail().isEmpty()) {
+            updateUser.setEmail(oldUser.getEmail());
         }
-        return user;
+        if (updateUser.getName() == null || updateUser.getName().isEmpty()) {
+            updateUser.setName(oldUser.getName());
+        }
+        return userStorage.save(updateUser);
     }
 
     @Override
-    public void deleteUserById(int userId) {
-        userStorage.deleteUserById(userId);
+    public User getUserById(Long userId) {
+        return userStorage.getById(userId);
     }
 
     @Override
-    public Map<Integer, User> getAllUsers() {
-        return userStorage.getAllUsers();
+    public void deleteUserById(Long userId) {
+        userStorage.delete(getUserById(userId));
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userStorage.findAll();
     }
 
     private void checkNameUser(User user) {
@@ -71,14 +68,6 @@ public class UserServiceImp implements UserService {
         }
         if (!user.getEmail().contains("@")) {
             throw new ValidationException("Некоректный адрес почты");
-        }
-    }
-
-    private void checkDuplicate(User user) {
-        for (User userCheck : userStorage.getAllUsers().values()) {
-            if (userCheck.getEmail().equals(user.getEmail())) {
-                throw new AlreadyExistsException("Пользователь с email: " + user.getEmail() + " уже зарегистрирован");
-            }
         }
     }
 }

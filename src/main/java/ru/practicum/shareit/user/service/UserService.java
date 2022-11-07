@@ -2,16 +2,17 @@ package ru.practicum.shareit.user.service;
 
 import ru.practicum.shareit.user.model.User;
 
+import java.util.List;
 import java.util.Map;
 
 public interface UserService {
-    User createUser(User user);
+    User createUser(User newUser);
 
-    User updateUser(User user);
+    User updateUser(User updateUser);
 
-    User getUserById(int userId);
+    User getUserById(Long userId);
 
-    void deleteUserById(int userId);
+    void deleteUserById(Long userId);
 
-    Map<Integer, User> getAllUsers();
+    List<User> getAllUsers();
 }

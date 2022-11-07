@@ -29,19 +29,19 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto updateUser(@RequestBody UserDto userDto, @PathVariable int userId) {
+    public UserDto updateUser(@RequestBody UserDto userDto, @PathVariable Long userId) {
         log.info("Получен запрос на обновление пользователя с ID " + userId);
         return UserMapper.toUserDto(userService.updateUser(UserMapper.toUser(userDto, userId)));
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable int userId) {
+    public UserDto getUserById(@PathVariable Long userId) {
         log.info("Получен запрос на отправку пользователя с ID " + userId);
         return UserMapper.toUserDto(userService.getUserById(userId));
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUserById(@PathVariable int userId) {
+    public void deleteUserById(@PathVariable Long userId) {
         log.info("Получен запрос на удаление пользователя с ID " + userId);
         userService.deleteUserById(userId);
     }
