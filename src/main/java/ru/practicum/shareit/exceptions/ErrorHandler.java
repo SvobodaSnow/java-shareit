@@ -9,6 +9,7 @@ import ru.practicum.shareit.exceptions.model.AlreadyExistsException;
 import ru.practicum.shareit.exceptions.model.NotFoundException;
 import ru.practicum.shareit.exceptions.model.ValidationException;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.Map;
 
 @Slf4j
@@ -19,27 +20,27 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handlerValidationException(final ValidationException e) {
         log.error(e.getMessage());
-        return Map.of("Error", e.getMessage());
+        return Map.of("error", e.getMessage());
     }
 
-    @ExceptionHandler({NotFoundException.class})
+    @ExceptionHandler({NotFoundException.class, EntityNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handlerMissingElementException(final NotFoundException e) {
+    public Map<String, String> handlerMissingElementException(final RuntimeException e) {
         log.error(e.getMessage());
-        return Map.of("Error", e.getMessage());
+        return Map.of("error", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handlerAllException(final Exception e) {
         log.error(e.getMessage());
-        return Map.of("Error", e.getMessage());
+        return Map.of("error", e.getMessage());
     }
 
     @ExceptionHandler({AlreadyExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handlerAlreadyExistsException(final AlreadyExistsException e) {
         log.error(e.getMessage());
-        return Map.of("Error", e.getMessage());
+        return Map.of("error", e.getMessage());
     }
 }

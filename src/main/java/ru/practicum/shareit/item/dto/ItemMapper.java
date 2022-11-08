@@ -5,33 +5,35 @@ import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class ItemMapper {
 
-    public static ItemDto toItemDto(Item item) {
+    public static ItemDto toItemDtoWithoutBooking(Item item, List<CommentDto> comments) {
         return new ItemDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
-                item.getRequest() != null ? item.getRequest() : null
+                item.getRequest() != null ? item.getRequest() : null,
+                null,
+                null,
+                comments
         );
     }
 
-    public static Item toItem(ItemDto itemDto, int owner) {
+    public static Item toItem(ItemDto itemDto, Long ownerId) {
         return new Item(
                 itemDto.getId(),
                 itemDto.getName(),
                 itemDto.getDescription(),
                 itemDto.getAvailable(),
-                owner,
+                ownerId,
                 itemDto.getRequest() != null ? itemDto.getRequest() : null
         );
     }
 
-    public static Item toItem(ItemDto itemDto, int itemId, int owner) {
+    public static Item toItem(ItemDto itemDto, Long itemId, Long owner) {
         return new Item(
                 itemId,
                 itemDto.getName(),
@@ -42,11 +44,29 @@ public class ItemMapper {
         );
     }
 
-    public static List<ItemDto> toItemDtoList(Map<Integer, Item> itemMap) {
+    public static List<ItemDto> toItemDtoList(List<Item> itemList) {
         List<ItemDto> itemDtoList = new ArrayList<>();
-        for (Item item : itemMap.values()) {
-            itemDtoList.add(toItemDto(item));
+        for (Item item : itemList) {
+            itemDtoList.add(toItemDtoWithoutBooking(item, null));
         }
         return itemDtoList;
+    }
+
+    public static ItemDto toItemDto(
+            Item item,
+            BookingForItemDto lastBooking,
+            BookingForItemDto nextBooking,
+            List<CommentDto> comments
+    ) {
+        return new ItemDto(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable(),
+                item.getRequest() != null ? item.getRequest() : null,
+                lastBooking,
+                nextBooking,
+                comments
+        );
     }
 }

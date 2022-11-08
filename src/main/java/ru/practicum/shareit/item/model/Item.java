@@ -1,16 +1,46 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
+import org.hibernate.Hibernate;
 import ru.practicum.shareit.request.model.ItemRequest;
 
-@Data
+import javax.persistence.*;
+import java.util.Objects;
+
+@Entity
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
+@RequiredArgsConstructor
+@Table(name = "items", schema = "public")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Item {
-    private int id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(nullable = false, length = 64)
     private String name;
+    @Column(nullable = false, length = 512)
     private String description;
+    @Column(nullable = false)
     private Boolean available;
-    private int owner;
+    @Column(nullable = false)
+    private Long owner;
+    @Transient
     private ItemRequest request;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Item item = (Item) o;
+        return id != null && Objects.equals(id, item.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
