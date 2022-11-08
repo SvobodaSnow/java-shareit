@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.service.UserService;
 
@@ -24,7 +22,7 @@ public class ItemController {
     @PostMapping
     public ItemDto createItem(@RequestBody ItemDto itemDto, @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос на добавление вещи");
-        return itemService.createItem(ItemMapper.toItem(itemDto, userId));
+        return itemService.createItem(itemDto, userId);
     }
 
     @GetMapping
@@ -46,7 +44,7 @@ public class ItemController {
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на редактирование вещи с ID " + itemId + " пользователем с ID " + userId);
-        return itemService.updateItem(ItemMapper.toItem(itemDto, itemId, userId));
+        return itemService.updateItem(itemDto, itemId, userId);
     }
 
     @GetMapping("/search")
@@ -62,6 +60,6 @@ public class ItemController {
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на добавление коментария к вещи вещи с ID ");
-        return itemService.addComment(CommentMapper.toComment(commentDto, itemId, userId));
+        return itemService.addComment(commentDto, itemId, userId);
     }
 }

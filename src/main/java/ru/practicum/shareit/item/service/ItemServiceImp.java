@@ -30,7 +30,8 @@ public class ItemServiceImp implements ItemService {
     private CommentStorage commentStorage;
 
     @Override
-    public ItemDto createItem(Item item) {
+    public ItemDto createItem(ItemDto itemDto, Long ownerId) {
+        Item item = ItemMapper.toItem(itemDto, ownerId);
         checkNameItem(item);
         checkDescriptionItem(item);
         checkAvailableItem(item);
@@ -46,10 +47,7 @@ public class ItemServiceImp implements ItemService {
             List<Comment> comments = commentStorage.findByItemId(item.getId());
             List<CommentDto> commentDtoList = new ArrayList<>();
             for (Comment comment : comments) {
-                commentDtoList.add(CommentMapper.toCommentDto(
-                        comment,
-                        userService.getUserById(comment.getAuthorId()).getName())
-                );
+                commentDtoList.add(CommentMapper.toCommentDto(comment));
             }
             itemDtoList.add(
                     ItemMapper.toItemDto(
@@ -69,10 +67,7 @@ public class ItemServiceImp implements ItemService {
         List<Comment> comments = commentStorage.findByItemId(item.getId());
         List<CommentDto> commentDtoList = new ArrayList<>();
         for (Comment comment : comments) {
-            commentDtoList.add(CommentMapper.toCommentDto(
-                    comment,
-                    userService.getUserById(comment.getAuthorId()).getName())
-            );
+            commentDtoList.add(CommentMapper.toCommentDto(comment));
         }
         if (item.getOwner().equals(userId)) {
             return ItemMapper.toItemDto(
@@ -86,7 +81,8 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
-    public ItemDto updateItem(Item item) {
+    public ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId) {
+        Item item = ItemMapper.toItem(itemDto, itemId, ownerId);
         Item oldItem = getItemById(item.getId());
         if (!oldItem.getOwner().equals(item.getOwner())) {
             throw new NotFoundException("ID владельца: " + oldItem.getOwner() +
@@ -122,10 +118,7 @@ public class ItemServiceImp implements ItemService {
                 List<Comment> comments = commentStorage.findByItemId(item.getId());
                 List<CommentDto> commentDtoList = new ArrayList<>();
                 for (Comment comment : comments) {
-                    commentDtoList.add(CommentMapper.toCommentDto(
-                            comment,
-                            userService.getUserById(comment.getAuthorId()).getName())
-                    );
+                    commentDtoList.add(CommentMapper.toCommentDto(comment));
                 }
                 itemDtoList.add(
                         ItemMapper.toItemDto(
@@ -141,21 +134,21 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
-    public CommentDto addComment(Comment comment) {
-        if (comment.getText() == null || comment.getText().isEmpty()) {
+    public CommentDto addComment(CommentDto commentDto, Long itemId, Long userId) {
+        if (commentDto.getText() == null || commentDto.getText().isEmpty()) {
             throw new ValidationException("Текст коментария не передан");
         }
         List<Booking> bookingList = bookingService.getBookingByItemIdAndBookerId(
-                comment.getAuthorId(),
-                comment.getItemId()
+                userId,
+                itemId
         );
         if (bookingList.size() == 0) {
-            throw new ValidationException("Пользователь c ID " + comment.getAuthorId() +
+            throw new ValidationException("Пользователь c ID " + userId +
                     ", оставляющий коментарий не брал вещь в аренду");
         }
+        Comment comment = CommentMapper.toComment(commentDto, itemId, bookingList.get(0).getBooker());
         Comment commentNew = commentStorage.save(comment);
-
-        return CommentMapper.toCommentDto(commentNew, userService.getUserById(comment.getAuthorId()).getName());
+        return CommentMapper.toCommentDto(commentNew);
     }
 
     @Override

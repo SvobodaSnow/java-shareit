@@ -3,16 +3,21 @@ package ru.practicum.shareit.booking.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingDtoRequest;
+import ru.practicum.shareit.booking.dto.BookingDtoResponse;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingStorage;
 import ru.practicum.shareit.exceptions.model.NotFoundException;
 import ru.practicum.shareit.exceptions.model.ValidationException;
+import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Primary
@@ -22,16 +27,23 @@ public class BookingServiceImp implements BookingService {
     private BookingStorage bookingStorage;
     @Autowired
     private UserStorage userStorage;
+    @Autowired
+    private ItemStorage itemStorage;
 
     @Override
-    public Booking createBooking(Booking booking) {
+    public BookingDtoResponse createBooking(BookingDtoRequest bookingDtoRequest, Long bookerId) {
+        Booking booking = BookingMapper.toBooking(
+                bookingDtoRequest,
+                itemStorage.getById(bookingDtoRequest.getItemId()),
+                userStorage.getById(bookerId)
+        );
         checkAvailableItem(booking);
         checkBooker(booking);
         checkStartInPast(booking);
         checkEndInPast(booking);
         checkEndBeforeStart(booking);
         checkItemIdAndBookerId(booking);
-        return bookingStorage.save(booking);
+        return BookingMapper.toBookingDtoResponse(bookingStorage.save(booking));
     }
 
     @Override
@@ -49,7 +61,12 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
-    public Booking updateBookingStatus(Long bookingId, Long userId, String approved) {
+    public BookingDtoResponse getBookingDtoById(Long bookingId, Long userId) {
+        return BookingMapper.toBookingDtoResponse(getBookingById(bookingId, userId));
+    }
+
+    @Override
+    public BookingDtoResponse updateBookingStatus(Long bookingId, Long userId, String approved) {
         Booking booking = getBookingById(bookingId, userId);
         if (!booking.getItem().getOwner().equals(userId)) {
             throw new NotFoundException(
@@ -66,11 +83,11 @@ public class BookingServiceImp implements BookingService {
         } else {
             booking.setStatus(Status.REJECTED);
         }
-        return bookingStorage.save(booking);
+        return BookingMapper.toBookingDtoResponse(bookingStorage.save(booking));
     }
 
     @Override
-    public List<Booking> getAllBookingsForUser(String stateString, Long userId) {
+    public List<BookingDtoResponse> getAllBookingsForUser(String stateString, Long userId) {
         State state;
         checkUser(userStorage.getById(userId));
         try {
@@ -78,30 +95,36 @@ public class BookingServiceImp implements BookingService {
         } catch (RuntimeException e) {
             throw new ValidationException("Unknown state: " + stateString);
         }
+        List<Booking> bookingList = new ArrayList<>();
         switch (state) {
             case ALL:
-                return bookingStorage.findByBookerIdOrderByIdDesc(userId);
+                bookingList = bookingStorage.findByBookerIdOrderByIdDesc(userId);
+                break;
             case WAITING:
-                return bookingStorage.findByBookerIdAndStatusOrderByIdDesc(userId, Status.WAITING);
+                bookingList = bookingStorage.findByBookerIdAndStatusOrderByIdDesc(userId, Status.WAITING);
+                break;
             case REJECTED:
-                return bookingStorage.findByBookerIdAndStatusOrderByIdDesc(userId, Status.REJECTED);
+                bookingList = bookingStorage.findByBookerIdAndStatusOrderByIdDesc(userId, Status.REJECTED);
+                break;
             case PAST:
-                return bookingStorage.findByBookerIdAndEndIsBeforeOrderByIdDesc(userId, LocalDateTime.now());
+                bookingList = bookingStorage.findByBookerIdAndEndIsBeforeOrderByIdDesc(userId, LocalDateTime.now());
+                break;
             case FUTURE:
-                return bookingStorage.findByBookerIdAndStartIsAfterOrderByIdDesc(userId, LocalDateTime.now());
+                bookingList = bookingStorage.findByBookerIdAndStartIsAfterOrderByIdDesc(userId, LocalDateTime.now());
+                break;
             case CURRENT:
-                return bookingStorage.findByBookerIdAndStartIsBeforeAndEndIsAfterOrderByIdDesc(
+                bookingList = bookingStorage.findByBookerIdAndStartIsBeforeAndEndIsAfterOrderByIdDesc(
                         userId,
                         LocalDateTime.now(),
                         LocalDateTime.now()
                 );
-            default:
-                throw new NotFoundException("Что-то пошло не так");
+                break;
         }
+        return BookingMapper.toBookingDtoResponseList(bookingList);
     }
 
     @Override
-    public List<Booking> getAllBookingsForOwner(String stateString, Long userId) {
+    public List<BookingDtoResponse> getAllBookingsForOwner(String stateString, Long userId) {
         State state;
         checkUser(userStorage.getById(userId));
         try {
@@ -109,26 +132,32 @@ public class BookingServiceImp implements BookingService {
         } catch (RuntimeException e) {
             throw new ValidationException("Unknown state: " + stateString);
         }
+        List<Booking> bookingList = new ArrayList<>();
         switch (state) {
             case ALL:
-                return bookingStorage.findByItemOwnerOrderByIdDesc(userId);
+                bookingList = bookingStorage.findByItemOwnerOrderByIdDesc(userId);
+                break;
             case WAITING:
-                return bookingStorage.findByItemOwnerAndStatusOrderByIdDesc(userId, Status.WAITING);
+                bookingList = bookingStorage.findByItemOwnerAndStatusOrderByIdDesc(userId, Status.WAITING);
+                break;
             case REJECTED:
-                return bookingStorage.findByItemOwnerAndStatusOrderByIdDesc(userId, Status.REJECTED);
+                bookingList = bookingStorage.findByItemOwnerAndStatusOrderByIdDesc(userId, Status.REJECTED);
+                break;
             case PAST:
-                return bookingStorage.findByItemOwnerAndEndIsBeforeOrderByIdDesc(userId, LocalDateTime.now());
+                bookingList = bookingStorage.findByItemOwnerAndEndIsBeforeOrderByIdDesc(userId, LocalDateTime.now());
+                break;
             case FUTURE:
-                return bookingStorage.findByItemOwnerAndStartIsAfterOrderByIdDesc(userId, LocalDateTime.now());
+                bookingList = bookingStorage.findByItemOwnerAndStartIsAfterOrderByIdDesc(userId, LocalDateTime.now());
+                break;
             case CURRENT:
-                return bookingStorage.findByItemOwnerAndStartIsBeforeAndEndIsAfterOrderByIdDesc(
+                bookingList = bookingStorage.findByItemOwnerAndStartIsBeforeAndEndIsAfterOrderByIdDesc(
                         userId,
                         LocalDateTime.now(),
                         LocalDateTime.now()
                 );
-            default:
-                throw new NotFoundException("Что-то пошло не так");
+                break;
         }
+        return BookingMapper.toBookingDtoResponseList(bookingList);
     }
 
     @Override

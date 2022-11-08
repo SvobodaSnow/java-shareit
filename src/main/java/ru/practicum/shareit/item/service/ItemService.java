@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public interface ItemService {
-    ItemDto createItem(Item item);
+    ItemDto createItem(ItemDto itemDto, Long owner);
 
     List<ItemDto> getAllItemsByUser(Long userId);
 
@@ -16,9 +16,9 @@ public interface ItemService {
 
     ItemDto getItemByIdWithBooking(Long itemId, Long userId);
 
-    ItemDto updateItem(Item item);
+    ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId);
 
     List<ItemDto> searchItem(String text);
 
-    CommentDto addComment(Comment comment);
+    CommentDto addComment(CommentDto commentDto, Long itemId, Long userId);
 }

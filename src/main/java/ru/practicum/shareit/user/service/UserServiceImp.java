@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.model.ValidationException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.storage.UserStorage;
 import ru.practicum.shareit.user.model.User;
 
@@ -16,14 +18,16 @@ public class UserServiceImp implements UserService {
     private UserStorage userStorage;
 
     @Override
-    public User createUser(User newUser) {
+    public UserDto createUser(UserDto userDto) {
+        User newUser = UserMapper.toUser(userDto);
         checkNameUser(newUser);
         checkEmailUser(newUser);
-        return userStorage.save(newUser);
+        return UserMapper.toUserDto(userStorage.save(newUser));
     }
 
     @Override
-    public User updateUser(User updateUser) {
+    public UserDto updateUser(UserDto userDto, Long userId) {
+        User updateUser = UserMapper.toUser(userDto, userId);
         User oldUser = getUserById(updateUser.getId());
         if ((updateUser.getEmail() == null || updateUser.getEmail().isEmpty()) &&
                 (updateUser.getName() == null || updateUser.getName().isEmpty())) {
@@ -35,7 +39,7 @@ public class UserServiceImp implements UserService {
         if (updateUser.getName() == null || updateUser.getName().isEmpty()) {
             updateUser.setName(oldUser.getName());
         }
-        return userStorage.save(updateUser);
+        return UserMapper.toUserDto(userStorage.save(updateUser));
     }
 
     @Override
@@ -44,13 +48,18 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    public UserDto getUserDtoById(Long userId) {
+        return UserMapper.toUserDto(userStorage.getById(userId));
+    }
+
+    @Override
     public void deleteUserById(Long userId) {
         userStorage.delete(getUserById(userId));
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userStorage.findAll();
+    public List<UserDto> getAllUsers() {
+        return UserMapper.toUserDtoList(userStorage.findAll());
     }
 
     private void checkNameUser(User user) {

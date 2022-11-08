@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -19,25 +18,25 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("Получен запрос на добавление пользователя");
-        return UserMapper.toUserDto(userService.createUser(UserMapper.toUser(userDto)));
+        return userService.createUser(userDto);
     }
 
     @GetMapping
     public List<UserDto> getAllUsers() {
         log.info("Получен запрос на формирование списка всех пользователей");
-        return UserMapper.toUserDtoList(userService.getAllUsers());
+        return userService.getAllUsers();
     }
 
     @PatchMapping("/{userId}")
     public UserDto updateUser(@RequestBody UserDto userDto, @PathVariable Long userId) {
         log.info("Получен запрос на обновление пользователя с ID " + userId);
-        return UserMapper.toUserDto(userService.updateUser(UserMapper.toUser(userDto, userId)));
+        return userService.updateUser(userDto, userId);
     }
 
     @GetMapping("/{userId}")
     public UserDto getUserById(@PathVariable Long userId) {
         log.info("Получен запрос на отправку пользователя с ID " + userId);
-        return UserMapper.toUserDto(userService.getUserById(userId));
+        return userService.getUserDtoById(userId);
     }
 
     @DeleteMapping("/{userId}")

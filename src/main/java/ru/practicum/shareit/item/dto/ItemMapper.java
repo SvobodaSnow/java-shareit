@@ -22,13 +22,13 @@ public class ItemMapper {
         );
     }
 
-    public static Item toItem(ItemDto itemDto, Long owner) {
+    public static Item toItem(ItemDto itemDto, Long ownerId) {
         return new Item(
                 itemDto.getId(),
                 itemDto.getName(),
                 itemDto.getDescription(),
                 itemDto.getAvailable(),
-                owner,
+                ownerId,
                 itemDto.getRequest() != null ? itemDto.getRequest() : null
         );
     }
