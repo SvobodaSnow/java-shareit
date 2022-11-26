@@ -70,7 +70,7 @@ public class UserServiceImp implements UserService {
 
     private void checkEmailUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
-            throw new ValidationException("Не указано имя пользователя");
+            throw new ValidationException("Не указан адрес почты пользователя");
         }
         if (!user.getEmail().contains("@")) {
             throw new ValidationException("Некоректный адрес почты");

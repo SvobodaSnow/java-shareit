@@ -15,9 +15,9 @@ public interface BookingService {
 
     BookingDtoResponse updateBookingStatus(Long bookingId, Long userId, String status);
 
-    List<BookingDtoResponse> getAllBookingsForUser(String state, Long userId);
+    List<BookingDtoResponse> getAllBookingsForUser(String state, Long userId, int from, int size);
 
-    List<BookingDtoResponse> getAllBookingsForOwner(String stateString, Long userId);
+    List<BookingDtoResponse> getAllBookingsForOwner(String stateString, Long userId, int from, int size);
 
     Booking getLastBooking(Long ownerId);
 

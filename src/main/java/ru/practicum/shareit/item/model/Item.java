@@ -28,7 +28,8 @@ public class Item {
     private Boolean available;
     @Column(nullable = false)
     private Long owner;
-    @Transient
+    @ManyToOne
+    @JoinColumn(name = "request_id")
     private ItemRequest request;
 
     @Override

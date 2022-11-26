@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -12,6 +13,8 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.storage.CommentStorage;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestStorage;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.ArrayList;
@@ -28,10 +31,16 @@ public class ItemServiceImp implements ItemService {
     private BookingService bookingService;
     @Autowired
     private CommentStorage commentStorage;
+    @Autowired
+    private ItemRequestStorage itemRequestStorage;
 
     @Override
-    public ItemDto createItem(ItemDto itemDto, Long ownerId) {
-        Item item = ItemMapper.toItem(itemDto, ownerId);
+    public ItemDtoResponse createItem(ItemDtoRequest itemDtoRequest, Long ownerId) {
+        ItemRequest itemRequest = null;
+        if (itemDtoRequest.getRequestId() != null) {
+            itemRequest = itemRequestStorage.getById(itemDtoRequest.getRequestId());
+        }
+        Item item = ItemMapper.toItem(itemDtoRequest, ownerId, itemRequest);
         checkNameItem(item);
         checkDescriptionItem(item);
         checkAvailableItem(item);
@@ -40,29 +49,31 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getAllItemsByUser(Long userId) {
-        List<Item> itemList = itemStorage.findByOwner(userId);
-        List<ItemDto> itemDtoList = new ArrayList<>();
+    public List<ItemDtoResponse> getAllItemsByUser(Long userId, int from, int size) {
+        checkPageableParameters(from, size);
+        int page = from / size;
+        List<Item> itemList = itemStorage.findByOwner(userId, PageRequest.of(page, size));
+        List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
         for (Item item : itemList) {
             List<Comment> comments = commentStorage.findByItemId(item.getId());
             List<CommentDto> commentDtoList = new ArrayList<>();
             for (Comment comment : comments) {
                 commentDtoList.add(CommentMapper.toCommentDto(comment));
             }
-            itemDtoList.add(
+            itemDtoResponseList.add(
                     ItemMapper.toItemDto(
-                        item,
-                        getLastBooking(item.getId()),
-                        getNextBooking(item.getId()),
-                        commentDtoList
+                            item,
+                            getLastBooking(item.getId()),
+                            getNextBooking(item.getId()),
+                            commentDtoList
                     )
             );
         }
-        return itemDtoList;
+        return itemDtoResponseList;
     }
 
     @Override
-    public ItemDto getItemByIdWithBooking(Long itemId, Long userId) {
+    public ItemDtoResponse getItemByIdWithBooking(Long itemId, Long userId) {
         Item item = getItemById(itemId);
         List<Comment> comments = commentStorage.findByItemId(item.getId());
         List<CommentDto> commentDtoList = new ArrayList<>();
@@ -81,8 +92,12 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
-    public ItemDto updateItem(ItemDto itemDto, Long itemId, Long ownerId) {
-        Item item = ItemMapper.toItem(itemDto, itemId, ownerId);
+    public ItemDtoResponse updateItem(ItemDtoRequest itemDtoRequest, Long itemId, Long ownerId) {
+        ItemRequest itemRequest = null;
+        if (itemDtoRequest.getRequestId() != null) {
+            itemRequest = itemRequestStorage.getById(itemDtoRequest.getRequestId());
+        }
+        Item item = ItemMapper.toItem(itemDtoRequest, itemId, ownerId, itemRequest);
         Item oldItem = getItemById(item.getId());
         if (!oldItem.getOwner().equals(item.getOwner())) {
             throw new NotFoundException("ID владельца: " + oldItem.getOwner() +
@@ -104,23 +119,26 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItem(String text) {
+    public List<ItemDtoResponse> searchItem(String text, int from, int size) {
+        checkPageableParameters(from, size);
+        int page = from / size;
         List<Item> itemList;
         if (text.isEmpty()) {
             return new ArrayList<>();
         } else {
             itemList = itemStorage.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndAvailableTrue(
-                            text,
-                            text
-                    );
-            List<ItemDto> itemDtoList = new ArrayList<>();
+                    text,
+                    text,
+                    PageRequest.of(page, size)
+            );
+            List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
             for (Item item : itemList) {
                 List<Comment> comments = commentStorage.findByItemId(item.getId());
                 List<CommentDto> commentDtoList = new ArrayList<>();
                 for (Comment comment : comments) {
                     commentDtoList.add(CommentMapper.toCommentDto(comment));
                 }
-                itemDtoList.add(
+                itemDtoResponseList.add(
                         ItemMapper.toItemDto(
                                 item,
                                 getLastBooking(item.getId()),
@@ -129,7 +147,7 @@ public class ItemServiceImp implements ItemService {
                         )
                 );
             }
-            return itemDtoList;
+            return itemDtoResponseList;
         }
     }
 
@@ -154,6 +172,11 @@ public class ItemServiceImp implements ItemService {
     @Override
     public Item getItemById(Long itemId) {
         return itemStorage.getById(itemId);
+    }
+
+    @Override
+    public List<Item> getItemsByRequestId(Long requestId) {
+        return itemStorage.findByRequestId(requestId);
     }
 
     private BookingForItemDto getLastBooking(Long itemId) {
@@ -208,5 +231,15 @@ public class ItemServiceImp implements ItemService {
 
     private void checkOwnerId(Item item) {
         userService.getUserById(item.getOwner()).getName();
+    }
+
+    private void checkPageableParameters(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException("Не верно указано значение первого элемента страницы. " +
+                    "Переданное значение: " + from);
+        }
+        if (size <= 0) {
+            throw new ValidationException("Не верно указано значение размера страницы. Переданное значение: " + size);
+        }
     }
 }
