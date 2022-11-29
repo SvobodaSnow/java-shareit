@@ -56,10 +56,7 @@ public class ItemServiceImp implements ItemService {
         List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
         for (Item item : itemList) {
             List<Comment> comments = commentStorage.findByItemId(item.getId());
-            List<CommentDto> commentDtoList = new ArrayList<>();
-            for (Comment comment : comments) {
-                commentDtoList.add(CommentMapper.toCommentDto(comment));
-            }
+            List<CommentDto> commentDtoList = fillComments(comments);
             itemDtoResponseList.add(
                     ItemMapper.toItemDto(
                             item,
@@ -76,10 +73,7 @@ public class ItemServiceImp implements ItemService {
     public ItemDtoResponse getItemByIdWithBooking(Long itemId, Long userId) {
         Item item = getItemById(itemId);
         List<Comment> comments = commentStorage.findByItemId(item.getId());
-        List<CommentDto> commentDtoList = new ArrayList<>();
-        for (Comment comment : comments) {
-            commentDtoList.add(CommentMapper.toCommentDto(comment));
-        }
+        List<CommentDto> commentDtoList = fillComments(comments);
         if (item.getOwner().equals(userId)) {
             return ItemMapper.toItemDto(
                     item,
@@ -134,10 +128,7 @@ public class ItemServiceImp implements ItemService {
             List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
             for (Item item : itemList) {
                 List<Comment> comments = commentStorage.findByItemId(item.getId());
-                List<CommentDto> commentDtoList = new ArrayList<>();
-                for (Comment comment : comments) {
-                    commentDtoList.add(CommentMapper.toCommentDto(comment));
-                }
+                List<CommentDto> commentDtoList = fillComments(comments);
                 itemDtoResponseList.add(
                         ItemMapper.toItemDto(
                                 item,
@@ -241,5 +232,13 @@ public class ItemServiceImp implements ItemService {
         if (size <= 0) {
             throw new ValidationException("Не верно указано значение размера страницы. Переданное значение: " + size);
         }
+    }
+
+    private List<CommentDto> fillComments(List<Comment> comments) {
+        List<CommentDto> commentDtoList = new ArrayList<>();
+        for (Comment comment : comments) {
+            commentDtoList.add(CommentMapper.toCommentDto(comment));
+        }
+        return commentDtoList;
     }
 }

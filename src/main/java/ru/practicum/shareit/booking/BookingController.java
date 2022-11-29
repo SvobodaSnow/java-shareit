@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDtoRequest;
 import ru.practicum.shareit.booking.dto.BookingDtoResponse;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 
@@ -17,10 +15,6 @@ import java.util.List;
 public class BookingController {
     @Autowired
     private BookingService bookingService;
-    @Autowired
-    private ItemService itemService;
-    @Autowired
-    private UserService userService;
 
     @PostMapping
     public BookingDtoResponse createBooking(

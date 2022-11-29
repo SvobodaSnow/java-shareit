@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Transactional
@@ -30,6 +31,12 @@ class UserServiceImpTest {
             15L,
             "NameTest1",
             "NameTest1@NameTest1.ru"
+    );
+
+    private final UserDto userDto2 = new UserDto(
+            16L,
+            "NameTest2",
+            "NameTest2@NameTest2.ru"
     );
 
     @Test
@@ -136,6 +143,13 @@ class UserServiceImpTest {
 
         assertThat(updateUserDto.getName(), equalTo("NameUpdate"));
         assertThat(updateUserDto.getEmail(), equalTo("NameUpdate@NameUpdate.ru"));
+
+        TypedQuery<User> query = em.createQuery("Select u from User u where u.id = :id", User.class);
+        User user = query.setParameter("id", newUserDto.getId()).getSingleResult();
+
+        assertThat(user.getId(), equalTo(updateUserDto.getId()));
+        assertThat(user.getName(), equalTo(updateUserDto.getName()));
+        assertThat(user.getEmail(), equalTo(updateUserDto.getEmail()));
     }
 
     @Test
@@ -189,5 +203,45 @@ class UserServiceImpTest {
         assertThat(retrievedUserDto.getId(), equalTo(newUserDto.getId()));
         assertThat(retrievedUserDto.getName(), equalTo(newUserDto.getName()));
         assertThat(retrievedUserDto.getEmail(), equalTo(newUserDto.getEmail()));
+    }
+
+    @Test
+    void deleteUserByIdTest() {
+        UserDto newUserDto = userService.createUser(userDto1);
+
+        assertThat(newUserDto.getName(), equalTo(userDto1.getName()));
+        assertThat(newUserDto.getEmail(), equalTo(userDto1.getEmail()));
+
+        TypedQuery<User> query = em.createQuery("Select u from User u where u.id = :id", User.class);
+        User user = query.setParameter("id", newUserDto.getId()).getSingleResult();
+
+        assertThat(user.getId(), equalTo(newUserDto.getId()));
+        assertThat(user.getName(), equalTo(newUserDto.getName()));
+        assertThat(user.getEmail(), equalTo(newUserDto.getEmail()));
+
+        userService.deleteUserById(newUserDto.getId());
+
+        List<User> users = query.setParameter("id", newUserDto.getId()).getResultList();
+
+        assertThat(users.size(), equalTo(0));
+    }
+
+    @Test
+    void getAllUsersTest() {
+        UserDto newUserDto1 = userService.createUser(userDto1);
+
+        assertThat(newUserDto1.getName(), equalTo(userDto1.getName()));
+        assertThat(newUserDto1.getEmail(), equalTo(userDto1.getEmail()));
+
+        UserDto newUserDto2 = userService.createUser(userDto2);
+
+        assertThat(newUserDto2.getName(), equalTo(userDto2.getName()));
+        assertThat(newUserDto2.getEmail(), equalTo(userDto2.getEmail()));
+
+        List<UserDto> retrievedUserDtoList = userService.getAllUsers();
+
+        List<UserDto> userDtoList = List.of(newUserDto1, newUserDto2);
+
+        assertArrayEquals(retrievedUserDtoList.toArray(), userDtoList.toArray());
     }
 }

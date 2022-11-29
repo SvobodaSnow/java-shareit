@@ -7,7 +7,6 @@ import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDtoRequest;
 import ru.practicum.shareit.item.dto.ItemDtoResponse;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 
@@ -17,8 +16,6 @@ import java.util.List;
 public class ItemController {
     @Autowired
     private ItemService itemService;
-    @Autowired
-    private UserService userService;
 
     @PostMapping
     public ItemDtoResponse createItem(

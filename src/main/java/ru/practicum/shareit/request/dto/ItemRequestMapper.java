@@ -53,12 +53,4 @@ public class ItemRequestMapper {
                 item.getRequest().getId()
         );
     }
-
-    public static List<ItemRequestDto> toItemRequestDtoList(List<ItemRequest> itemRequestList) {
-        List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
-        for (ItemRequest itemRequest : itemRequestList) {
-            itemRequestDtoList.add(toItemRequestDtoWithoutItems(itemRequest));
-        }
-        return itemRequestDtoList;
-    }
 }

@@ -8,7 +8,6 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Table(name = "users", schema = "public")

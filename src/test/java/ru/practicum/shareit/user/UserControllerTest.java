@@ -31,7 +31,7 @@ class UserControllerTest {
     private ObjectMapper mapper;
 
     @MockBean
-    private UserService userServiceMock;
+    private UserService userService;
 
     @Autowired
     private MockMvc mvc;
@@ -50,7 +50,7 @@ class UserControllerTest {
 
     @Test
     void saveNewUserTest() throws Exception {
-        Mockito.when(userServiceMock.createUser(any())).thenReturn(userDto1);
+        Mockito.when(userService.createUser(any())).thenReturn(userDto1);
 
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(userDto1))
@@ -65,7 +65,7 @@ class UserControllerTest {
 
     @Test
     void getAllUsersTest() throws Exception {
-        Mockito.when(userServiceMock.getAllUsers()).thenReturn(new ArrayList<>(List.of(userDto1, userDto2)));
+        Mockito.when(userService.getAllUsers()).thenReturn(new ArrayList<>(List.of(userDto1, userDto2)));
 
         mvc.perform(get("/users")
                         .content(mapper.writeValueAsString(userDto1))
@@ -84,9 +84,9 @@ class UserControllerTest {
 
     @Test
     void updateUserTest() throws Exception {
-        Mockito.when(userServiceMock.updateUser(any(), any())).thenReturn(userDto2);
+        Mockito.when(userService.updateUser(any(), any())).thenReturn(userDto2);
 
-        Mockito.when(userServiceMock.updateUser(any(), eq(15L))).thenReturn(userDto1);
+        Mockito.when(userService.updateUser(any(), eq(15L))).thenReturn(userDto1);
 
         mvc.perform(patch("/users/15")
                         .content(mapper.writeValueAsString(userDto1))
@@ -111,9 +111,9 @@ class UserControllerTest {
 
     @Test
     void getUserByIdTest() throws Exception {
-        Mockito.when(userServiceMock.getUserDtoById(eq(16L))).thenReturn(userDto2);
+        Mockito.when(userService.getUserDtoById(eq(16L))).thenReturn(userDto2);
 
-        Mockito.when(userServiceMock.getUserDtoById(eq(15L))).thenReturn(userDto1);
+        Mockito.when(userService.getUserDtoById(eq(15L))).thenReturn(userDto1);
 
         mvc.perform(get("/users/15")
                         .content(mapper.writeValueAsString(userDto1))
@@ -138,7 +138,7 @@ class UserControllerTest {
 
     @Test
     void deleteUserByIdTest() throws Exception {
-        doNothing().when(userServiceMock).deleteUserById(anyLong());
+        doNothing().when(userService).deleteUserById(anyLong());
 
         mvc.perform(delete("/users/15")
                         .content(mapper.writeValueAsString(userDto1))
@@ -147,6 +147,6 @@ class UserControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        verify(userServiceMock, times(1)).deleteUserById(15L);
+        verify(userService, times(1)).deleteUserById(15L);
     }
 }
