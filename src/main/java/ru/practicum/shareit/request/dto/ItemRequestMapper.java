@@ -36,7 +36,7 @@ public class ItemRequestMapper {
         );
     }
 
-    public static List<ItemForItemRequestDto> toItemForItemRequestDtoList (List<Item> itemList) {
+    public static List<ItemForItemRequestDto> toItemForItemRequestDtoList(List<Item> itemList) {
         List<ItemForItemRequestDto> itemForItemRequestDtoList = new ArrayList<>();
         for (Item item : itemList) {
             itemForItemRequestDtoList.add(toItemForItemRequestDto(item));
