@@ -137,7 +137,7 @@ public class ItemServiceImp implements ItemService {
             for (Item item : itemList) {
                 List<Comment> comments = new ArrayList<>();
                 for (Comment comment : allComments) {
-                    if(comment.getItemId().equals(item.getId())) {
+                    if (comment.getItemId().equals(item.getId())) {
                         comments.add(comment);
                     }
                 }
