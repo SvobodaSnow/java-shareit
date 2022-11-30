@@ -22,7 +22,7 @@ public class ItemController {
             @RequestBody ItemDtoRequest itemDtoRequest,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на добавление вещи");
+        log.info("Получен запрос на добавление вещи от пользователя с ID: " + userId);
         return itemService.createItem(itemDtoRequest, userId);
     }
 
@@ -32,7 +32,7 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на формирование списка всех вещей");
+        log.info("Получен запрос на формирование списка всех вещей от пользователя с ID: " + userId);
         return itemService.getAllItemsByUser(userId, from, size);
     }
 
@@ -58,7 +58,7 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam String text
     ) {
-        log.info("Получен запрос на поиск вещи");
+        log.info("Получен запрос на поиск вещи. Текст поискового запроса: " + text);
         return itemService.searchItem(text, from, size);
     }
 
@@ -68,7 +68,8 @@ public class ItemController {
             @PathVariable Long itemId,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на добавление коментария к вещи вещи с ID ");
+        log.info("Получен запрос на добавление коментария к вещи вещи с ID: " + itemId +
+                " от пользователя с ID: " + userId);
         return itemService.addComment(commentDto, itemId, userId);
     }
 }

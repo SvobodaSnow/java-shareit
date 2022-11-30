@@ -21,7 +21,8 @@ public class BookingController {
             @RequestBody BookingDtoRequest bookingDtoRequest,
             @RequestHeader("X-Sharer-User-Id") Long bookerId
     ) {
-        log.info("Получен запрос на создание бронирования");
+        log.info("Получен запрос на создание бронирования от пользвателя с ID: " + bookerId +
+                " на вещь с ID: " + bookingDtoRequest.getItemId());
         return bookingService.createBooking(bookingDtoRequest, bookerId);
     }
 
@@ -30,7 +31,7 @@ public class BookingController {
             @PathVariable Long bookingId,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на формирование бронирования");
+        log.info("Получен запрос на формирование бронирования от пользвателя с ID: " + userId);
         return bookingService.getBookingDtoById(bookingId, userId);
     }
 
@@ -40,7 +41,8 @@ public class BookingController {
             @PathVariable Long bookingId,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на обновление статуса запроса");
+        log.info("Получен запрос на обновление статуса запроса. Параметр обновления: " + approved +
+                ". Запрос получен от пользователя с ID: " + userId);
         return bookingService.updateBookingStatus(bookingId, userId, approved);
     }
 
@@ -51,7 +53,7 @@ public class BookingController {
             @RequestParam(defaultValue = "ALL") String state,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос для формирования списка бронирований пользователя");
+        log.info("Получен запрос для формирования списка бронирований пользователя с ID: " + userId);
         return bookingService.getAllBookingsForUser(state, userId, from, size);
     }
 

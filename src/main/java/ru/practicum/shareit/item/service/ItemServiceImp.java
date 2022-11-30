@@ -125,9 +125,22 @@ public class ItemServiceImp implements ItemService {
                     text,
                     PageRequest.of(page, size)
             );
+
+            List<Long> commentsId = new ArrayList<>();
+            for (Item item : itemList) {
+                commentsId.add(item.getId());
+            }
+
+            List<Comment> allComments = commentStorage.findByItemIdIn(commentsId);
+
             List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
             for (Item item : itemList) {
-                List<Comment> comments = commentStorage.findByItemId(item.getId());
+                List<Comment> comments = new ArrayList<>();
+                for (Comment comment : allComments) {
+                    if(comment.getItemId().equals(item.getId())) {
+                        comments.add(comment);
+                    }
+                }
                 List<CommentDto> commentDtoList = fillComments(comments);
                 itemDtoResponseList.add(
                         ItemMapper.toItemDto(
@@ -168,6 +181,11 @@ public class ItemServiceImp implements ItemService {
     @Override
     public List<Item> getItemsByRequestId(Long requestId) {
         return itemStorage.findByRequestId(requestId);
+    }
+
+    @Override
+    public List<Item> getItemsByRequestIdList(List<Long> itemRequestIdList) {
+        return itemStorage.findByRequestIdIn(itemRequestIdList);
     }
 
     private BookingForItemDto getLastBooking(Long itemId) {

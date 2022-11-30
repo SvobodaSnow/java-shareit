@@ -63,9 +63,21 @@ public class ItemRequestServiceImp implements ItemRequestService {
                 PageRequest.of(page, size)
         );
 
+        List<Long> itemRequestIdList = new ArrayList<>();
+        for (ItemRequest itemRequest : itemRequestList) {
+            itemRequestIdList.add(itemRequest.getId());
+        }
+
+        List<Item> allItemList = itemService.getItemsByRequestIdList(itemRequestIdList);
+
         List<ItemRequestDto> itemRequestDtoList = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequestList) {
-            List<Item> items = itemService.getItemsByRequestId(itemRequest.getId());
+            List<Item> items = new ArrayList<>();
+            for (Item item : allItemList) {
+                if (item.getRequest().getId().equals(itemRequest.getId())) {
+                    items.add(item);
+                }
+            }
             itemRequestDtoList.add(ItemRequestMapper.toItemRequestDto(itemRequest, items));
         }
         return itemRequestDtoList;

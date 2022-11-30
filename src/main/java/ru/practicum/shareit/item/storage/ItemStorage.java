@@ -16,4 +16,6 @@ public interface ItemStorage extends JpaRepository<Item, Long> {
     List<Item> findByOwner(Long ownerId, Pageable pageable);
 
     List<Item> findByRequestId(Long requestId);
+
+    List<Item> findByRequestIdIn(List<Long> requestsId);
 }

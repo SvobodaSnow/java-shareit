@@ -20,7 +20,7 @@ public class ItemRequestController {
             @RequestBody ItemRequestDto itemRequestDto,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на добавление нового запроса на вещь");
+        log.info("Получен запрос на добавление нового запроса на вещь от пользователя с ID: " + userId);
         return itemRequestService.createItemRequest(itemRequestDto, userId);
     }
 
@@ -36,7 +36,7 @@ public class ItemRequestController {
             @RequestParam(defaultValue = "10") int size,
             @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
-        log.info("Получен запрос на формирование списка всех запросов на вещи");
+        log.info("Получен запрос на формирование списка всех запросов на вещи для пользователя с ID: " + userId);
         return itemRequestService.getAllItemRequest(userId, from, size);
     }
 
