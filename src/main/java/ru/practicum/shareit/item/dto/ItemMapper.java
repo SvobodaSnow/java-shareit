@@ -2,68 +2,60 @@ package ru.practicum.shareit.item.dto;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ItemMapper {
 
-    public static ItemDto toItemDtoWithoutBooking(Item item, List<CommentDto> comments) {
-        return new ItemDto(
+    public static ItemDtoResponse toItemDtoWithoutBooking(Item item, List<CommentDto> comments) {
+        return new ItemDtoResponse(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
-                item.getRequest() != null ? item.getRequest() : null,
+                item.getRequest() != null ? item.getRequest().getId() : null,
                 null,
                 null,
                 comments
         );
     }
 
-    public static Item toItem(ItemDto itemDto, Long ownerId) {
+    public static Item toItem(ItemDtoRequest itemDtoRequest, Long ownerId, ItemRequest request) {
         return new Item(
-                itemDto.getId(),
-                itemDto.getName(),
-                itemDto.getDescription(),
-                itemDto.getAvailable(),
+                null,
+                itemDtoRequest.getName(),
+                itemDtoRequest.getDescription(),
+                itemDtoRequest.getAvailable(),
                 ownerId,
-                itemDto.getRequest() != null ? itemDto.getRequest() : null
+                request
         );
     }
 
-    public static Item toItem(ItemDto itemDto, Long itemId, Long owner) {
+    public static Item toItem(ItemDtoRequest itemDtoRequest, Long itemId, Long owner, ItemRequest request) {
         return new Item(
                 itemId,
-                itemDto.getName(),
-                itemDto.getDescription(),
-                itemDto.getAvailable(),
+                itemDtoRequest.getName(),
+                itemDtoRequest.getDescription(),
+                itemDtoRequest.getAvailable(),
                 owner,
-                itemDto.getRequest() != null ? itemDto.getRequest() : null
+                request
         );
     }
 
-    public static List<ItemDto> toItemDtoList(List<Item> itemList) {
-        List<ItemDto> itemDtoList = new ArrayList<>();
-        for (Item item : itemList) {
-            itemDtoList.add(toItemDtoWithoutBooking(item, null));
-        }
-        return itemDtoList;
-    }
-
-    public static ItemDto toItemDto(
+    public static ItemDtoResponse toItemDto(
             Item item,
             BookingForItemDto lastBooking,
             BookingForItemDto nextBooking,
             List<CommentDto> comments
     ) {
-        return new ItemDto(
+        return new ItemDtoResponse(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
-                item.getRequest() != null ? item.getRequest() : null,
+                item.getRequest() != null ? item.getRequest().getId() : null,
                 lastBooking,
                 nextBooking,
                 comments
