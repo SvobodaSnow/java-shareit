@@ -50,6 +50,13 @@ public class ItemRequestServiceImp implements ItemRequestService {
     @Override
     public List<ItemRequestDto> getAllItemRequest(Long userId, int from, int size) {
         checkUser(userId);
+        if (from < 0) {
+            throw new ValidationException("Не верно указано значение первого элемента страницы. " +
+                    "Переданное значение: " + from);
+        }
+        if (size <= 0) {
+            throw new ValidationException("Не верно указано значение размера страницы. Переданное значение: " + size);
+        }
         int page = from / size;
         Page<ItemRequest> itemRequestList = itemRequestStorage.findAllWithoutRequesterId(
                 userId,
