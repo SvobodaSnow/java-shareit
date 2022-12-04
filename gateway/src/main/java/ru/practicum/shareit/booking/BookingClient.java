@@ -10,6 +10,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.client.BaseClient;
+import ru.practicum.shareit.exceptions.model.ValidationException;
 
 import java.util.Map;
 
@@ -37,11 +38,34 @@ public class BookingClient extends BaseClient {
     }
 
 
-    public ResponseEntity<Object> bookItem(long userId, BookItemRequestDto requestDto) {
+    public ResponseEntity<Object> createBooking(long userId, BookItemRequestDto requestDto) {
+        checkEndBeforeStart(requestDto);
         return post("", userId, requestDto);
     }
 
     public ResponseEntity<Object> getBooking(long userId, Long bookingId) {
         return get("/" + bookingId, userId);
+    }
+
+    public ResponseEntity<Object> updateBookingStatus(String approved, Long bookingId, Long userId) {
+        Map<String, Object> parameters = Map.of(
+                "approved", approved
+        );
+        return patch("/" + bookingId + "?approved={approved}", userId, parameters, null);
+    }
+
+    public ResponseEntity<Object> getAllBookingsForOwner(int from, int size, BookingState state, Long userId) {
+        Map<String, Object> parameters = Map.of(
+                "state", state.name(),
+                "from", from,
+                "size", size
+        );
+        return get("/owner?state={state}&from={from}&size={size}", userId, parameters);
+    }
+
+    private void checkEndBeforeStart(BookItemRequestDto booking) {
+        if (booking.getEnd().isBefore(booking.getStart())) {
+            throw new ValidationException("Начало бронирования позже окончания");
+        }
     }
 }
