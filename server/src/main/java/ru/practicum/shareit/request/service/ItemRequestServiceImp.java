@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exceptions.model.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -29,6 +30,7 @@ public class ItemRequestServiceImp implements ItemRequestService {
     @Override
     public ItemRequestDto createItemRequest(ItemRequestDto itemRequestDto, Long userId) {
         checkUser(userId);
+        checkDescription(itemRequestDto);
         ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto, userService.getUserById(userId));
         return ItemRequestMapper.toItemRequestDtoWithoutItems(itemRequestStorage.save(itemRequest));
     }
@@ -84,5 +86,11 @@ public class ItemRequestServiceImp implements ItemRequestService {
 
     private void checkUser(Long userId) {
         userService.getUserById(userId).getName();
+    }
+
+    private void checkDescription(ItemRequestDto itemRequestDto) {
+        if (itemRequestDto.getDescription() == null || itemRequestDto.getDescription().isEmpty()) {
+            throw new ValidationException("Не указано описание запрашиваемой вещи");
+        }
     }
 }

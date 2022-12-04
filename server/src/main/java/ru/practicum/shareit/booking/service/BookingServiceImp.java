@@ -40,6 +40,9 @@ public class BookingServiceImp implements BookingService {
         );
         checkAvailableItem(booking);
         checkBooker(booking);
+        checkStartInPast(booking);
+        checkEndInPast(booking);
+        checkEndBeforeStart(booking);
         checkItemIdAndBookerId(booking);
         return BookingMapper.toBookingDtoResponse(bookingStorage.save(booking));
     }
@@ -88,6 +91,7 @@ public class BookingServiceImp implements BookingService {
     public List<BookingDtoResponse> getAllBookingsForUser(String stateString, Long userId, int from, int size) {
         State state;
         checkUser(userStorage.getById(userId));
+        checkPageableParameters(from, size);
         int page = from / size;
         try {
             state = State.valueOf(stateString);
@@ -143,6 +147,7 @@ public class BookingServiceImp implements BookingService {
     public List<BookingDtoResponse> getAllBookingsForOwner(String stateString, Long userId, int from, int size) {
         State state;
         checkUser(userStorage.getById(userId));
+        checkPageableParameters(from, size);
         int page = from / size;
         try {
             state = State.valueOf(stateString);
@@ -220,8 +225,26 @@ public class BookingServiceImp implements BookingService {
         }
     }
 
+    private void checkEndInPast(Booking booking) {
+        if (booking.getEnd().isBefore(LocalDateTime.now())) {
+            throw new ValidationException("Окончание бронирования в прошлом");
+        }
+    }
+
     private void checkBooker(Booking booking) {
         booking.getBooker().getName();
+    }
+
+    private void checkStartInPast(Booking booking) {
+        if (booking.getStart().isBefore(LocalDateTime.now())) {
+            throw new ValidationException("Начало бронирования в прошлом");
+        }
+    }
+
+    private void checkEndBeforeStart(Booking booking) {
+        if (booking.getEnd().isBefore(booking.getStart())) {
+            throw new ValidationException("Начало бронирования позже оконччания");
+        }
     }
 
     private void checkUser(User user) {
@@ -231,6 +254,16 @@ public class BookingServiceImp implements BookingService {
     private void checkItemIdAndBookerId(Booking booking) {
         if (booking.getBooker().getId().equals(booking.getItem().getOwner())) {
             throw new NotFoundException("Создатель бронирования владелец вещи");
+        }
+    }
+
+    private void checkPageableParameters(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException("Не верно указано значение первого элемента страницы. " +
+                    "Переданное значение: " + from);
+        }
+        if (size <= 0) {
+            throw new ValidationException("Не верно указано значение размера страницы. Переданное значение: " + size);
         }
     }
 }

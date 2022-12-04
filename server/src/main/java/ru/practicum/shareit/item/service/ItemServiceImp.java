@@ -41,12 +41,16 @@ public class ItemServiceImp implements ItemService {
             itemRequest = itemRequestStorage.getById(itemDtoRequest.getRequestId());
         }
         Item item = ItemMapper.toItem(itemDtoRequest, ownerId, itemRequest);
+        checkNameItem(item);
+        checkDescriptionItem(item);
+        checkAvailableItem(item);
         checkOwnerId(item);
         return ItemMapper.toItemDtoWithoutBooking(itemStorage.save(item), null);
     }
 
     @Override
     public List<ItemDtoResponse> getAllItemsByUser(Long userId, int from, int size) {
+        checkPageableParameters(from, size);
         int page = from / size;
         List<Item> itemList = itemStorage.findByOwner(userId, PageRequest.of(page, size));
         List<ItemDtoResponse> itemDtoResponseList = new ArrayList<>();
@@ -110,6 +114,7 @@ public class ItemServiceImp implements ItemService {
 
     @Override
     public List<ItemDtoResponse> searchItem(String text, int from, int size) {
+        checkPageableParameters(from, size);
         int page = from / size;
         List<Item> itemList;
         if (text.isEmpty()) {
@@ -215,8 +220,36 @@ public class ItemServiceImp implements ItemService {
         return nextBookingDto;
     }
 
+    private void checkNameItem(Item item) {
+        if (item.getName() == null || item.getName().isBlank()) {
+            throw new ValidationException("Не указано имя предмета");
+        }
+    }
+
+    private void checkDescriptionItem(Item item) {
+        if (item.getDescription() == null || item.getDescription().isBlank()) {
+            throw new ValidationException("Не указано описание предмета");
+        }
+    }
+
+    private void checkAvailableItem(Item item) {
+        if (item.getAvailable() == null) {
+            throw new ValidationException("Не указана доступность товара");
+        }
+    }
+
     private void checkOwnerId(Item item) {
         userService.getUserById(item.getOwner()).getName();
+    }
+
+    private void checkPageableParameters(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException("Не верно указано значение первого элемента страницы. " +
+                    "Переданное значение: " + from);
+        }
+        if (size <= 0) {
+            throw new ValidationException("Не верно указано значение размера страницы. Переданное значение: " + size);
+        }
     }
 
     private List<CommentDto> fillComments(List<Comment> comments) {

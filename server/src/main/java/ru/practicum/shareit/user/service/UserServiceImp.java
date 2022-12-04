@@ -20,6 +20,8 @@ public class UserServiceImp implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         User newUser = UserMapper.toUser(userDto);
+        checkNameUser(newUser);
+        checkEmailUser(newUser);
         return UserMapper.toUserDto(userStorage.save(newUser));
     }
 
@@ -58,5 +60,20 @@ public class UserServiceImp implements UserService {
     @Override
     public List<UserDto> getAllUsers() {
         return UserMapper.toUserDtoList(userStorage.findAll());
+    }
+
+    private void checkNameUser(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            throw new ValidationException("Не указано имя пользователя");
+        }
+    }
+
+    private void checkEmailUser(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new ValidationException("Не указан адрес почты пользователя");
+        }
+        if (!user.getEmail().contains("@")) {
+            throw new ValidationException("Некоректный адрес почты");
+        }
     }
 }
