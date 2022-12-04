@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDtoRequest;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
+
 @Slf4j
 @Controller
 @RequiredArgsConstructor
@@ -18,7 +21,7 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Object> createItem(
             @RequestBody ItemDtoRequest itemDtoRequest,
-            @RequestHeader("X-Sharer-User-Id") Long userId
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на добавление вещи от пользователя с ID: " + userId);
         return itemClient.createItem(itemDtoRequest, userId);
@@ -26,9 +29,9 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getAllItem(
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestHeader("X-Sharer-User-Id") Long userId
+            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+            @Positive @RequestParam(defaultValue = "10") int size,
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на формирование списка всех вещей от пользователя с ID: " + userId);
         return itemClient.getAllItems(from, size, userId);
@@ -36,8 +39,8 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public ResponseEntity<Object> getItemById(
-            @PathVariable Long itemId,
-            @RequestHeader("X-Sharer-User-Id") Long userId
+            @Positive @PathVariable Long itemId,
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на отправку вещи с ID " + itemId);
         return itemClient.getItemById(itemId, userId);
@@ -46,8 +49,8 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> updateItem(
             @RequestBody ItemDtoRequest itemDtoRequest,
-            @PathVariable Long itemId,
-            @RequestHeader("X-Sharer-User-Id") Long userId
+            @Positive @PathVariable Long itemId,
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на редактирование вещи с ID " + itemId + " пользователем с ID " + userId);
         return itemClient.updateItem(itemDtoRequest, itemId, userId);
@@ -55,9 +58,9 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<Object> searchItem(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam(defaultValue = "10") int size,
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+            @Positive @RequestParam(defaultValue = "10") int size,
             @RequestParam String text
     ) {
         log.info("Получен запрос на поиск вещи. Текст поискового запроса: " + text);
@@ -67,8 +70,8 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> addComment(
             @RequestBody CommentDto commentDto,
-            @PathVariable Long itemId,
-            @RequestHeader("X-Sharer-User-Id") Long userId
+            @Positive @PathVariable Long itemId,
+            @Positive @RequestHeader("X-Sharer-User-Id") Long userId
     ) {
         log.info("Получен запрос на добавление коментария к вещи вещи с ID: " + itemId +
                 " от пользователя с ID: " + userId);

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDtoRequest;
 import ru.practicum.shareit.booking.dto.BookingDtoResponse;
 import ru.practicum.shareit.booking.dto.BookingMapper;
@@ -32,6 +33,7 @@ public class BookingServiceImp implements BookingService {
     private ItemStorage itemStorage;
 
     @Override
+    @Transactional
     public BookingDtoResponse createBooking(BookingDtoRequest bookingDtoRequest, Long bookerId) {
         Booking booking = BookingMapper.toBooking(
                 bookingDtoRequest,
@@ -67,6 +69,7 @@ public class BookingServiceImp implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingDtoResponse updateBookingStatus(Long bookingId, Long userId, String approved) {
         Booking booking = getBookingById(bookingId, userId);
         if (!booking.getItem().getOwner().equals(userId)) {

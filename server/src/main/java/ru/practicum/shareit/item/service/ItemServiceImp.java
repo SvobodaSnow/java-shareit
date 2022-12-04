@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exceptions.model.NotFoundException;
@@ -35,6 +36,7 @@ public class ItemServiceImp implements ItemService {
     private ItemRequestStorage itemRequestStorage;
 
     @Override
+    @Transactional
     public ItemDtoResponse createItem(ItemDtoRequest itemDtoRequest, Long ownerId) {
         ItemRequest itemRequest = null;
         if (itemDtoRequest.getRequestId() != null) {
@@ -86,6 +88,7 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDtoResponse updateItem(ItemDtoRequest itemDtoRequest, Long itemId, Long ownerId) {
         ItemRequest itemRequest = null;
         if (itemDtoRequest.getRequestId() != null) {
@@ -156,6 +159,7 @@ public class ItemServiceImp implements ItemService {
     }
 
     @Override
+    @Transactional
     public CommentDto addComment(CommentDto commentDto, Long itemId, Long userId) {
         if (commentDto.getText() == null || commentDto.getText().isEmpty()) {
             throw new ValidationException("Текст коментария не передан");

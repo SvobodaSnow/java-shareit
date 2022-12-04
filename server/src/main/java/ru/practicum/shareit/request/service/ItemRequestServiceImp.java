@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.model.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Primary
 @Service
+@Transactional
 public class ItemRequestServiceImp implements ItemRequestService {
     @Autowired
     private ItemRequestStorage itemRequestStorage;
@@ -28,6 +30,7 @@ public class ItemRequestServiceImp implements ItemRequestService {
     private ItemService itemService;
 
     @Override
+    @Transactional
     public ItemRequestDto createItemRequest(ItemRequestDto itemRequestDto, Long userId) {
         checkUser(userId);
         checkDescription(itemRequestDto);
